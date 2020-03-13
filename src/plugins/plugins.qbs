@@ -2,6 +2,7 @@ Project {
     name: "plugins"
 
     references: [
+        "amap",
         "csv",
         "defold",
         "defoldcollection",

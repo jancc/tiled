@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
-SUBDIRS = csv \
+SUBDIRS = amap \
+          csv \
           defold \
           defoldcollection \
           droidcraft \
