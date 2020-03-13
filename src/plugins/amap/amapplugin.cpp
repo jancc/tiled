@@ -9,14 +9,34 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <zlib.h>
 
 #include <vector>
 
 using namespace Tiled;
 
-static const unsigned char VERSION = 0;
+static const unsigned char VERSION = 1;
 
-bool Amap::AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::FileFormat::Options options)
+namespace Amap {
+
+template <typename T>
+std::vector<char> compressVector(const std::vector<T> &data)
+{
+    uLongf srcSize = data.size() * sizeof(T);
+
+    std::vector<char> compressed(compressBound(srcSize));
+
+    Bytef *dest = reinterpret_cast<Bytef*>(compressed.data());
+    uLongf destSize = compressed.size();
+    const Bytef *src = reinterpret_cast<const Bytef*>(data.data());
+
+    compress(dest, &destSize, src, srcSize);
+
+    compressed.resize(destSize);
+    return compressed;
+}
+
+bool AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::FileFormat::Options options)
 {
     Q_UNUSED(options)
 
@@ -35,7 +55,7 @@ bool Amap::AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Til
     QDataStream data(file.device());
     data.setByteOrder(QDataStream::LittleEndian);
 
-    data << quint8('A') << quint8('M') << quint8('A') << quint8('P');
+    data.writeRawData("AMAP", 4);
     data << quint8(VERSION);
     data << quint32(map->width()) << quint32(map->height()) << quint32(map->layerCount());
 
@@ -45,34 +65,45 @@ bool Amap::AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Til
         if(!layer->isTileLayer()) continue;
         const TileLayer *tileLayer = static_cast<const TileLayer*>(layer);
 
+        std::vector<qint16> layerdata(map->height() * map->width(), 0);
+
         for(int y = 0; y < map->height(); y++) {
             for(int x = 0; x < map->width(); x++) {
                 const Cell &cell = tileLayer->cellAt(x, y);
                 const Tile *tile = cell.tile();
                 if(tile) {
-                    data << qint16(tile->id());
+                    layerdata[y * map->width() + x] = qint16(tile->id());
 
                     if(tile->objectGroup()) {
                         collisions[y * map->width() + x] = 1;
                     }
                 } else {
-                    data << qint16(-1);
+                    layerdata[y * map->width() + x] = -1;
                 }
             }
         }
+
+        std::vector<char> compressedLayerdata = compressVector(layerdata);
+        data << quint32(compressedLayerdata.size());
+        data.writeRawData(compressedLayerdata.data(), compressedLayerdata.size());
     }
 
-    for(quint8 collision : collisions) data << quint8(collision);
+    std::vector<char> compressedCollisions = compressVector(collisions);
+    data << quint32(compressedCollisions.size());
+    data.writeRawData(compressedCollisions.data(), compressedCollisions.size());
+
     file.commit();
     return true;
 }
 
-QString Amap::AmapPlugin::shortName() const
+QString AmapPlugin::shortName() const
 {
     return tr("amap");
 }
 
-QString Amap::AmapPlugin::nameFilter() const
+QString AmapPlugin::nameFilter() const
 {
     return QLatin1String("AMAP files (*.amap)");
+}
+
 }
