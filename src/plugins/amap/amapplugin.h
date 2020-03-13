@@ -11,9 +11,6 @@ class AMAPSHARED_EXPORT AmapPlugin : public Tiled::WritableMapFormat
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.mapeditor.MapFormat" FILE "plugin.json")
 
-    static constexpr char MAGIC[4] = {'A', 'M', 'A', 'P'};
-    static const unsigned char VERSION = 1;
-
 public:
     bool write(const Tiled::Map *map, const QString &fileName, Options options) override;
 
