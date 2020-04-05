@@ -131,6 +131,15 @@ bool AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::Fi
         name.resize(8, '\0');
         data.writeRawData(name.data(), name.length());
 
+        bool ok = false;
+        uint type = object->type().toUInt(&ok);
+
+        if(!ok || type > UINT8_MAX) {
+            mError = QCoreApplication::translate("AMAP Error", "Object type is invalid (unsigned byte expected).");
+            return false;
+        }
+
+        data << quint8(type);
         data << quint16(object->x() / map->tileSize().width());
         data << quint16(object->y() / map->tileSize().height());
     }
