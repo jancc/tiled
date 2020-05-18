@@ -94,8 +94,10 @@ bool AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::Fi
                 if(tile) {
                     layerdata[y * map->width() + x] = qint16(tile->id());
 
-                    if(tile->objectGroup()) {
+                    if(QString::compare(tile->type(), "FLOOR") == 0) {
                         collisions[y * map->width() + x] = 1;
+                    } else if(QString::compare(tile->type(), "WALL") == 0) {
+                        collisions[y * map->width() + x] = 2;
                     }
                 } else {
                     layerdata[y * map->width() + x] = -1;
@@ -131,15 +133,6 @@ bool AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::Fi
         name.resize(8, '\0');
         data.writeRawData(name.data(), name.length());
 
-        bool ok = false;
-        uint type = object->type().toUInt(&ok);
-
-        if(!ok || type > UINT8_MAX) {
-            mError = QCoreApplication::translate("AMAP Error", "Object type is invalid (unsigned byte expected).");
-            return false;
-        }
-
-        data << quint8(type);
         data << quint16(object->x() / map->tileSize().width());
         data << quint16(object->y() / map->tileSize().height());
     }
