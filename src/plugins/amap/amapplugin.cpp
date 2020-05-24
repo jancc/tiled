@@ -98,6 +98,8 @@ bool AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::Fi
                         collisions[y * map->width() + x] = 1;
                     } else if(QString::compare(tile->type(), "WALL") == 0) {
                         collisions[y * map->width() + x] = 2;
+                    } else if(QString::compare(tile->type(), "BRIDGE") == 0) {
+                        collisions[y * map->width() + x] = 0;
                     }
                 } else {
                     layerdata[y * map->width() + x] = -1;
