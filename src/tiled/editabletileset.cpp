@@ -36,14 +36,15 @@ namespace Tiled {
 EditableTileset::EditableTileset(const QString &name,
                                  QObject *parent)
     : EditableAsset(nullptr, nullptr, parent)
+    , mTileset(Tileset::create(name, 0, 0))
 {
-    mTileset = Tileset::create(name, 0, 0);
     setObject(mTileset.data());
 }
 
 EditableTileset::EditableTileset(const Tileset *tileset, QObject *parent)
     : EditableAsset(nullptr, const_cast<Tileset*>(tileset), parent)
     , mReadOnly(true)
+    , mTileset(tileset->sharedPointer())    // keep alive
 {
 }
 
@@ -62,6 +63,8 @@ EditableTileset::~EditableTileset()
 {
     detachTiles(tileset()->tiles().values());
     detachTerrains(tileset()->terrains());
+
+    EditableManager::instance().mEditableTilesets.remove(tileset());
 }
 
 EditableTile *EditableTileset::tile(int id)
@@ -192,7 +195,7 @@ void EditableTileset::setImage(const QString &imageFilePath)
     }
 }
 
-void EditableTileset::setTileSize(int width, int height)
+void EditableTileset::setTileSize(QSize size)
 {
     if (isCollection() && tileCount() > 0) {
         ScriptManager::instance().throwError(QCoreApplication::translate("Script Errors", "Can't set tile size on an image collection tileset"));
@@ -201,11 +204,11 @@ void EditableTileset::setTileSize(int width, int height)
 
     if (tilesetDocument()) {
         TilesetParameters parameters(*tileset());
-        parameters.tileSize = QSize(width, height);
+        parameters.tileSize = size;
 
         push(new ChangeTilesetParameters(tilesetDocument(), parameters));
     } else if (!checkReadOnly()) {
-        tileset()->setTileSize(QSize(width, height));
+        tileset()->setTileSize(size);
 
         if (!tileSize().isEmpty() && !image().isEmpty())
             tileset()->loadImage();
