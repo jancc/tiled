@@ -70,7 +70,10 @@ bool AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::Fi
 
     // write tiles
 
+    qint32 currentTileLayer = -1;
     for(Layer *layer : map->layers()) {
+        if(layer->isTileLayer()) currentTileLayer++;
+
         if(!layer->isTileLayer() && layer->isObjectGroup()) {
             // since we iterate over all layers, might aswell use the time to extract the object layer here
             if(objectGroup) {
@@ -93,6 +96,9 @@ bool AmapPlugin::write(const Tiled::Map *map, const QString &fileName, Tiled::Fi
                 const Tile *tile = cell.tile();
                 if(tile) {
                     layerdata[y * map->width() + x] = qint16(tile->id());
+
+                    // ignore collisions on topmost layer
+                    if(currentTileLayer == tileLayerCount - 1) continue;
 
                     if(QString::compare(tile->type(), "FLOOR") == 0) {
                         collisions[y * map->width() + x] = 1;
