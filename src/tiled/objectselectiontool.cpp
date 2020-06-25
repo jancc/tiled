@@ -355,7 +355,7 @@ void ObjectSelectionTool::activate(MapScene *scene)
             this, &ObjectSelectionTool::updateHandlesAndOrigin);
     connect(mapDocument(), &MapDocument::selectedObjectsChanged,
             this, &ObjectSelectionTool::updateHandlesAndOrigin);
-    connect(mapDocument(), &MapDocument::tilesetTileOffsetChanged,
+    connect(mapDocument(), &MapDocument::tilesetTilePositioningChanged,
             this, &ObjectSelectionTool::updateHandlesAndOrigin);
 
     scene->addItem(mOriginIndicator.get());
@@ -377,7 +377,7 @@ void ObjectSelectionTool::deactivate(MapScene *scene)
                this, &ObjectSelectionTool::updateHandlesAndOrigin);
     disconnect(mapDocument(), &MapDocument::selectedObjectsChanged,
                this, &ObjectSelectionTool::updateHandlesAndOrigin);
-    disconnect(mapDocument(), &MapDocument::tilesetTileOffsetChanged,
+    disconnect(mapDocument(), &MapDocument::tilesetTilePositioningChanged,
                this, &ObjectSelectionTool::updateHandlesAndOrigin);
 
     abortCurrentAction(Deactivated);
@@ -1219,6 +1219,15 @@ void ObjectSelectionTool::startRotating(const QPointF &pos)
     updateHandleVisibility();
 }
 
+// Brings rotation values within the range of 0 - 360
+static qreal normalizeRotation(qreal rotation)
+{
+    qreal normalized = fmod(rotation, 360.);
+    if (normalized < 0.)
+        normalized += 360.;
+    return normalized;
+}
+
 void ObjectSelectionTool::updateRotatingItems(const QPointF &pos,
                                               Qt::KeyboardModifiers modifiers)
 {
@@ -1247,7 +1256,7 @@ void ObjectSelectionTool::updateRotatingItems(const QPointF &pos,
         const QPointF newPixelPos = mOriginPos + newRelPos - offset;
         const QPointF newPos = renderer->screenToPixelCoords(newPixelPos);
 
-        const qreal newRotation = object.oldRotation + angleDiff * 180 / M_PI;
+        const qreal newRotation = normalizeRotation(object.oldRotation + angleDiff * 180 / M_PI);
 
         mapObject->setPosition(newPos);
         if (mapObject->canRotate())

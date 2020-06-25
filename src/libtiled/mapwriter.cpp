@@ -54,13 +54,6 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
-static QString colorToString(const QColor &color)
-{
-    if (color.alpha() != 255)
-        return color.name(QColor::HexArgb);
-    return color.name();
-}
-
 namespace Tiled {
 namespace Internal {
 
@@ -202,7 +195,7 @@ void MapWriterPrivate::writeMap(QXmlStreamWriter &w, const Map &map)
     const QString orientation = orientationToString(map.orientation());
     const QString renderOrder = renderOrderToString(map.renderOrder());
 
-    w.writeAttribute(QLatin1String("version"), QLatin1String("1.2"));
+    w.writeAttribute(QLatin1String("version"), QLatin1String("1.4"));
     w.writeAttribute(QLatin1String("tiledversion"), QCoreApplication::applicationVersion());
     w.writeAttribute(QLatin1String("orientation"), orientation);
     w.writeAttribute(QLatin1String("renderorder"), renderOrder);
@@ -330,7 +323,7 @@ void MapWriterPrivate::writeTileset(QXmlStreamWriter &w, const Tileset &tileset,
         }
     } else {
         // Include version in external tilesets
-        w.writeAttribute(QLatin1String("version"), QLatin1String("1.2"));
+        w.writeAttribute(QLatin1String("version"), QLatin1String("1.4"));
         w.writeAttribute(QLatin1String("tiledversion"), QCoreApplication::applicationVersion());
     }
 
@@ -355,6 +348,11 @@ void MapWriterPrivate::writeTileset(QXmlStreamWriter &w, const Tileset &tileset,
     if (tileset.backgroundColor().isValid()) {
         w.writeAttribute(QLatin1String("backgroundcolor"),
                          colorToString(tileset.backgroundColor()));
+    }
+
+    if (tileset.objectAlignment() != Unspecified) {
+        const QString alignment = alignmentToString(tileset.objectAlignment());
+        w.writeAttribute(QLatin1String("objectalignment"), alignment);
     }
 
     // Write editor settings when saving external tilesets
@@ -709,7 +707,6 @@ void MapWriterPrivate::writeLayerAttributes(QXmlStreamWriter &w,
                          QString::number(width));
         w.writeAttribute(QLatin1String("height"),
                          QString::number(height));
-
     }
 
     if (!layer.isVisible())
@@ -718,6 +715,10 @@ void MapWriterPrivate::writeLayerAttributes(QXmlStreamWriter &w,
         w.writeAttribute(QLatin1String("locked"), QLatin1String("1"));
     if (opacity != qreal(1))
         w.writeAttribute(QLatin1String("opacity"), QString::number(opacity));
+    if (layer.tintColor().isValid()) {
+        w.writeAttribute(QLatin1String("tintcolor"),
+                         colorToString(layer.tintColor()));
+    }
 
     const QPointF offset = layer.offset();
     if (!offset.isNull()) {

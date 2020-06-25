@@ -25,6 +25,7 @@
 
 class QLineEdit;
 class QPlainTextEdit;
+class QPushButton;
 
 namespace Tiled {
 
@@ -34,7 +35,7 @@ class ConsoleDock : public QDockWidget
 
 public:
     explicit ConsoleDock(QWidget *parent = nullptr);
-    ~ConsoleDock();
+    ~ConsoleDock() override;
 
 protected:
     void changeEvent(QEvent *e) override;
@@ -44,6 +45,7 @@ private:
     void appendWarning(const QString &str);
     void appendError(const QString &str);
     void appendScript(const QString &str);
+    void appendScriptResult(const QString &tempName, const QString &result);
 
     void executeScript();
 
@@ -53,6 +55,7 @@ private:
 
     QPlainTextEdit *mPlainTextEdit;
     QLineEdit *mLineEdit;
+    QPushButton *mClearButton;
     QStringList mHistory;
     int mHistoryPosition = 0;
 };

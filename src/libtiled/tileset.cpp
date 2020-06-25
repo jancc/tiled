@@ -59,6 +59,7 @@ Tileset::Tileset(QString name, int tileWidth, int tileHeight,
     mTileHeight(tileHeight),
     mTileSpacing(tileSpacing),
     mMargin(margin),
+    mObjectAlignment(Unspecified),
     mOrientation(Orthogonal),
     mGridSize(tileWidth, tileHeight),
     mColumnCount(0),
@@ -668,7 +669,7 @@ void Tileset::addWangSet(WangSet *wangSet)
     mWangSets.append(wangSet);
 }
 
-void Tileset::addWangSet(std::unique_ptr<WangSet> &&wangSet)
+void Tileset::addWangSet(std::unique_ptr<WangSet> wangSet)
 {
     addWangSet(wangSet.release());
 }
@@ -856,6 +857,7 @@ SharedTileset Tileset::clone() const
 
     // mFileName stays empty
     c->mTileOffset = mTileOffset;
+    c->mObjectAlignment = mObjectAlignment;
     c->mOrientation = mOrientation;
     c->mGridSize = mGridSize;
     c->mColumnCount = mColumnCount;

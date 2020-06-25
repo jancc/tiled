@@ -22,9 +22,11 @@
 
 #include "automapperwrapper.h"
 #include "logginginterface.h"
+#include "mainwindow.h"
 #include "map.h"
 #include "mapdocument.h"
 #include "preferences.h"
+#include "project.h"
 #include "tilelayer.h"
 
 #include <QDir>
@@ -35,6 +37,8 @@
 #include "qtcompat_p.h"
 
 using namespace Tiled;
+
+SessionOption<bool> AutomappingManager::automappingWhileDrawing { "automapping.whileDrawing", false };
 
 AutomappingManager::AutomappingManager(QObject *parent)
     : QObject(parent)
@@ -85,7 +89,7 @@ void AutomappingManager::autoMapRegion(const QRegion &region)
 
 void AutomappingManager::onRegionEdited(const QRegion &where, Layer *touchedLayer)
 {
-    if (Preferences::instance()->automappingDrawing())
+    if (automappingWhileDrawing)
         autoMapInternal(where, touchedLayer);
 }
 
@@ -235,16 +239,22 @@ bool AutomappingManager::loadFile(const QString &filePath)
  */
 void AutomappingManager::setMapDocument(MapDocument *mapDocument, const QString &rulesFile)
 {
-    if (mMapDocument)
-        mMapDocument->disconnect(this);
+    if (mMapDocument != mapDocument) {
+        if (mMapDocument)
+            mMapDocument->disconnect(this);
 
-    mMapDocument = mapDocument;
+        mMapDocument = mapDocument;
 
-    if (mMapDocument) {
-        connect(mMapDocument, &MapDocument::fileNameChanged,
-                this, &AutomappingManager::onMapFileNameChanged);
-        connect(mMapDocument, &MapDocument::regionEdited,
-                this, &AutomappingManager::onRegionEdited);
+        if (mMapDocument) {
+            connect(mMapDocument, &MapDocument::fileNameChanged,
+                    this, &AutomappingManager::onMapFileNameChanged);
+            connect(mMapDocument, &MapDocument::regionEdited,
+                    this, &AutomappingManager::onRegionEdited);
+        }
+
+        // Cleanup needed because AutoMapper instances hold a pointer to the
+        // MapDocument they apply to.
+        cleanUp();
     }
 
     refreshRulesFile(rulesFile);
@@ -258,6 +268,11 @@ void AutomappingManager::refreshRulesFile(const QString &ruleFileOverride)
     if (rulesFile.isEmpty() && mMapDocument) {
         const QString mapPath = QFileInfo(mMapDocument->fileName()).path();
         rulesFile = mapPath + QLatin1String("/rules.txt");
+
+        if (!QFileInfo::exists(rulesFile)) {
+            auto &project = MainWindow::instance()->project();
+            rulesFile = project.mAutomappingRulesFile;
+        }
     }
 
     if (mRulesFile != rulesFile) {

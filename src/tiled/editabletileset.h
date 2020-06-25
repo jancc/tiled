@@ -37,6 +37,7 @@ class EditableTileset : public EditableAsset
     Q_PROPERTY(QList<QObject*> tiles READ tiles)
     Q_PROPERTY(QList<QObject*> terrains READ terrains)
     Q_PROPERTY(int tileCount READ tileCount)
+    Q_PROPERTY(int nextTileId READ nextTileId)
     Q_PROPERTY(int tileWidth READ tileWidth WRITE setTileWidth)
     Q_PROPERTY(int tileHeight READ tileHeight WRITE setTileHeight)
     Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize)
@@ -45,12 +46,36 @@ class EditableTileset : public EditableAsset
     Q_PROPERTY(QSize imageSize READ imageSize)
     Q_PROPERTY(int tileSpacing READ tileSpacing)
     Q_PROPERTY(int margin READ margin)
+    Q_PROPERTY(Alignment objectAlignment READ objectAlignment WRITE setObjectAlignment)
     Q_PROPERTY(QPoint tileOffset READ tileOffset WRITE setTileOffset)
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation)
     Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
     Q_PROPERTY(bool collection READ isCollection)
     Q_PROPERTY(QList<QObject*> selectedTiles READ selectedTiles WRITE setSelectedTiles)
 
 public:
+    // Synchronized with Tiled::Alignment
+    enum Alignment {
+        Unspecified,
+        TopLeft,
+        Top,
+        TopRight,
+        Left,
+        Center,
+        Right,
+        BottomLeft,
+        Bottom,
+        BottomRight
+    };
+    Q_ENUM(Alignment)
+
+    // Synchronized with Tileset::Orientation
+    enum Orientation {
+        Orthogonal,
+        Isometric,
+    };
+    Q_ENUM(Orientation)
+
     Q_INVOKABLE explicit EditableTileset(const QString &name = QString(),
                                          QObject *parent = nullptr);
     explicit EditableTileset(const Tileset *tileset, QObject *parent = nullptr);
@@ -63,6 +88,7 @@ public:
     const QString &name() const;
     QString image() const;
     int tileCount() const;
+    int nextTileId() const;
     int tileWidth() const;
     int tileHeight() const;
     QSize tileSize() const;
@@ -71,7 +97,9 @@ public:
     QSize imageSize() const;
     int tileSpacing() const;
     int margin() const;
+    Alignment objectAlignment() const;
     QPoint tileOffset() const;
+    Orientation orientation() const;
     QColor backgroundColor() const;
     bool isCollection() const;
 
@@ -85,8 +113,6 @@ public:
     Q_INVOKABLE Tiled::EditableTile *addTile();
     Q_INVOKABLE void removeTiles(const QList<QObject*> &tiles);
 
-    // TODO: Add ability to change the tileset image and tile size
-
     TilesetDocument *tilesetDocument() const;
     Tileset *tileset() const;
 
@@ -97,7 +123,9 @@ public slots:
     void setTileHeight(int height);
     void setTileSize(QSize size);
     void setTileSize(int width, int height);
+    void setObjectAlignment(Alignment objectAlignment);
     void setTileOffset(QPoint tileOffset);
+    void setOrientation(Orientation orientation);
     void setBackgroundColor(const QColor &color);
 
 private:
@@ -134,6 +162,11 @@ inline QString EditableTileset::image() const
 inline int EditableTileset::tileCount() const
 {
     return tileset()->tileCount();
+}
+
+inline int EditableTileset::nextTileId() const
+{
+    return tileset()->nextTileId();
 }
 
 inline int EditableTileset::tileWidth() const
@@ -176,9 +209,19 @@ inline int EditableTileset::margin() const
     return tileset()->margin();
 }
 
+inline EditableTileset::Alignment EditableTileset::objectAlignment() const
+{
+    return static_cast<Alignment>(tileset()->objectAlignment());
+}
+
 inline QPoint EditableTileset::tileOffset() const
 {
     return tileset()->tileOffset();
+}
+
+inline EditableTileset::Orientation EditableTileset::orientation() const
+{
+    return static_cast<Orientation>(tileset()->orientation());
 }
 
 inline QColor EditableTileset::backgroundColor() const

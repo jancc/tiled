@@ -81,6 +81,10 @@ void EditableObjectGroup::removeObjectAt(int index)
 
 void EditableObjectGroup::removeObject(EditableMapObject *editableMapObject)
 {
+    if (!editableMapObject) {
+        ScriptManager::instance().throwNullArgError(0);
+        return;
+    }
     int index = objectGroup()->objects().indexOf(editableMapObject->mapObject());
     if (index == -1) {
         ScriptManager::instance().throwError(QCoreApplication::translate("Script Errors", "Object not found"));
@@ -92,6 +96,10 @@ void EditableObjectGroup::removeObject(EditableMapObject *editableMapObject)
 
 void EditableObjectGroup::insertObjectAt(int index, EditableMapObject *editableMapObject)
 {
+    if (!editableMapObject) {
+        ScriptManager::instance().throwNullArgError(1);
+        return;
+    }
     if (index < 0 || index > objectCount()) {
         ScriptManager::instance().throwError(QCoreApplication::translate("Script Errors", "Index out of range"));
         return;
@@ -103,9 +111,9 @@ void EditableObjectGroup::insertObjectAt(int index, EditableMapObject *editableM
     }
 
     if (auto doc = document()) {
-        asset()->push(new AddMapObjects(doc,
-                                        objectGroup(),
-                                        editableMapObject->mapObject()));
+        AddRemoveMapObjects::Entry entry { editableMapObject->mapObject(), objectGroup() };
+        entry.index = index;
+        asset()->push(new AddMapObjects(doc, { entry }));
     } else {
         objectGroup()->insertObject(index, editableMapObject->mapObject());
         editableMapObject->release();   // now owned by the object group

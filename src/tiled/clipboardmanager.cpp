@@ -50,8 +50,6 @@ static const char * const TMX_MIMETYPE = "text/tmx";
 
 using namespace Tiled;
 
-ClipboardManager *ClipboardManager::mInstance;
-
 ClipboardManager::ClipboardManager()
     : mClipboard(QApplication::clipboard())
     , mHasMap(false)
@@ -67,18 +65,8 @@ ClipboardManager::ClipboardManager()
  */
 ClipboardManager *ClipboardManager::instance()
 {
-    if (!mInstance)
-        mInstance = new ClipboardManager;
-    return mInstance;
-}
-
-/**
- * Deletes the clipboard manager instance if it exists.
- */
-void ClipboardManager::deleteInstance()
-{
-    delete mInstance;
-    mInstance = nullptr;
+    static ClipboardManager instance;
+    return &instance;
 }
 
 /**

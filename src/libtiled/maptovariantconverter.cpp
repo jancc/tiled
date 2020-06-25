@@ -38,13 +38,6 @@
 
 using namespace Tiled;
 
-static QString colorToString(const QColor &color)
-{
-    if (color.alpha() != 255)
-        return color.name(QColor::HexArgb);
-    return color.name();
-}
-
 QVariant MapToVariantConverter::toVariant(const Map &map, const QDir &mapDir)
 {
     mDir = mapDir;
@@ -53,7 +46,7 @@ QVariant MapToVariantConverter::toVariant(const Map &map, const QDir &mapDir)
     QVariantMap mapVariant;
 
     mapVariant[QLatin1String("type")] = QLatin1String("map");
-    mapVariant[QLatin1String("version")] = (mVersion == 2) ? 1.2 : 1.1;
+    mapVariant[QLatin1String("version")] = (mVersion == 2) ? 1.4 : 1.1;
     mapVariant[QLatin1String("tiledversion")] = QCoreApplication::applicationVersion();
     mapVariant[QLatin1String("orientation")] = orientationToString(map.orientation());
     mapVariant[QLatin1String("renderorder")] = renderOrderToString(map.renderOrder());
@@ -169,7 +162,7 @@ QVariant MapToVariantConverter::toVariant(const Tileset &tileset,
         tilesetVariant[QLatin1String("type")] = QLatin1String("tileset");
 
         // Include version in external tilesets
-        tilesetVariant[QLatin1String("version")] = (mVersion == 2) ? 1.2 : 1.1;
+        tilesetVariant[QLatin1String("version")] = (mVersion == 2) ? 1.4 : 1.1;
         tilesetVariant[QLatin1String("tiledversion")] = QCoreApplication::applicationVersion();
     }
 
@@ -195,9 +188,12 @@ QVariant MapToVariantConverter::toVariant(const Tileset &tileset,
         }
     }
 
-    const QColor bgColor = tileset.backgroundColor();
-    if (bgColor.isValid())
-        tilesetVariant[QLatin1String("backgroundcolor")] = colorToString(bgColor);
+    const QColor &backgroundColor = tileset.backgroundColor();
+    if (backgroundColor.isValid())
+        tilesetVariant[QLatin1String("backgroundcolor")] = colorToString(backgroundColor);
+
+    if (tileset.objectAlignment() != Unspecified)
+        tilesetVariant[QLatin1String("objectalignment")] = alignmentToString(tileset.objectAlignment());
 
     addProperties(tilesetVariant, tileset.properties());
 
@@ -749,6 +745,9 @@ void MapToVariantConverter::addLayerAttributes(QVariantMap &layerVariant,
         layerVariant[QLatin1String("offsetx")] = offset.x();
         layerVariant[QLatin1String("offsety")] = offset.y();
     }
+
+    if (layer.tintColor().isValid())
+        layerVariant[QLatin1String("tintcolor")] = colorToString(layer.tintColor());
 
     addProperties(layerVariant, layer.properties());
 }

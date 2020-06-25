@@ -84,39 +84,34 @@ QAction *ToolManager::registerTool(AbstractTool *tool)
 
     tool->setMapDocument(mMapDocument);
 
-    QString toolTip = tool->name();
-    QKeySequence shortcut = tool->shortcut();
-    if (!shortcut.isEmpty()) {
-        toolTip = QString(QLatin1String("%1 (%2)")).arg(toolTip,
-                                                        shortcut.toString());
-    }
-
     QAction *toolAction = new QAction(tool->icon(), tool->name(), this);
-    toolAction->setShortcut(shortcut);
+    toolAction->setShortcut(tool->shortcut());
     toolAction->setData(QVariant::fromValue<AbstractTool*>(tool));
     toolAction->setCheckable(true);
-    toolAction->setToolTip(toolTip);
+    toolAction->setText(tool->name());
     toolAction->setEnabled(tool->isEnabled());
+    toolAction->setVisible(tool->isVisible());
 
     mActionGroup->addAction(toolAction);
 
     connect(tool, &AbstractTool::changed,
             this, &ToolManager::toolChanged);
 
-    connect(toolAction, &QAction::changed,
-            this, &ToolManager::toolActionChanged);
-
     connect(tool, &AbstractTool::enabledChanged,
             this, &ToolManager::toolEnabledChanged);
+    connect(tool, &AbstractTool::visibleChanged,
+            this, [=] (bool visible) { toolAction->setVisible(visible); });
 
     // Select the first added tool
-    if (!mSelectedTool && tool->isEnabled()) {
-        setSelectedTool(tool);
-        toolAction->setChecked(true);
-    }
+    if (tool->isVisible()) {
+        if (!mSelectedTool && tool->isEnabled()) {
+            setSelectedTool(tool);
+            toolAction->setChecked(true);
+        }
 
-    if (mRegisterActions)
-        ActionManager::registerAction(toolAction, tool->id());
+        if (mRegisterActions)
+            ActionManager::registerAction(toolAction, tool->id());
+    }
 
     return toolAction;
 }
@@ -195,26 +190,6 @@ void ToolManager::toolChanged()
         action->setIcon(tool->icon());
         action->setShortcut(tool->shortcut());
     }
-}
-
-void ToolManager::toolActionChanged()
-{
-    if (mUpdatingActionToolTip)
-        return;
-
-    auto action = static_cast<QAction*>(sender());
-
-    QString toolTip = action->text();
-    QKeySequence shortcut = action->shortcut();
-
-    if (!shortcut.isEmpty()) {
-        toolTip = QString(QLatin1String("%1 (%2)")).arg(toolTip,
-                                                        shortcut.toString());
-    }
-
-    mUpdatingActionToolTip = true;
-    action->setToolTip(toolTip);
-    mUpdatingActionToolTip = false;
 }
 
 void ToolManager::retranslateTools()
@@ -317,7 +292,7 @@ AbstractTool *ToolManager::firstEnabledTool() const
     const auto actions = mActionGroup->actions();
     for (QAction *action : actions)
         if (AbstractTool *tool = action->data().value<AbstractTool*>())
-            if (tool->isEnabled())
+            if (tool->isEnabled() && tool->isVisible())
                 return tool;
 
     return nullptr;

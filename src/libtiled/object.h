@@ -28,8 +28,6 @@
 
 #pragma once
 
-#include <QObject>
-
 #include "properties.h"
 #include "objecttypes.h"
 
@@ -38,10 +36,8 @@ namespace Tiled {
 /**
  * The base class for anything that can hold properties.
  */
-class TILEDSHARED_EXPORT Object : public QObject
+class TILEDSHARED_EXPORT Object
 {
-    Q_OBJECT
-
 public:
     enum TypeId {
         LayerType,
@@ -99,7 +95,8 @@ public:
     QVariant property(const QString &name) const
     { return mProperties.value(name); }
 
-    QVariant inheritedProperty(const QString &name) const;
+    QVariant resolvedProperty(const QString &name) const;
+    QVariantMap resolvedProperties() const;
 
     /**
      * Returns the value of the object's \a name property, as a string.

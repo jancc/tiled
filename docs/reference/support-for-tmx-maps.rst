@@ -102,6 +102,7 @@ D
 Go
 ~~
 
+-  `github.com/lafriks/go-tiled <https://github.com/lafriks/go-tiled>`__
 -  `github.com/salviati/go-tmx/tmx <https://github.com/salviati/go-tmx>`__
 
 Haskell
@@ -242,6 +243,11 @@ Godot
 
 - `Tiled Map Importer <https://godotengine.org/asset-library/asset/25>`__ imports each map as Godot scene which can be instanced or inherited (`forum announcement <http://discourse.mapeditor.org/t/importer-plugin-for-godot-engine/1833/1>`__).
 - `Tiled To Godot Export <https://github.com/MikeMnD/tiled-to-godot-export>`__ is a Tiled :doc:`JavaScript extension </reference/scripting>` for exporting Tilemaps and Tilesets in Godot 3.2 format (`forum announcement <https://discourse.mapeditor.org/t/tiled-editor-map-and-tileset-integration-with-godot-3-2/4347>`__).
+
+Grid Engine
+~~~~~~~~~~~
+
+- Planimeter's `Grid Engine <https://www.planimeter.org/grid-sdk/>`__ supports Tiled Lua-exported maps.
 
 Haxe
 ~~~~
@@ -453,6 +459,10 @@ Unity
    3D pipeline for Tiled maps. It uses prefabs as tiles, and can place
    decorations dynamically on tiles. Supports multiple layers (including
    object layers).
+-  `Tuesday <https://github.com/ShreveportArcade/Tuesday>`__: A generic
+   C# serializer and deserializer plus a set of Unity editor
+   scripts that allow you to drag and drop TMX files into your scene,
+   make edits, and save back out as TMX files. MIT license.
 -  `UniTiled <https://yjaffal.itch.io/unitiled>`__, a native TMX importer for Unity.
 -  `X-UniTMX <https://bitbucket.org/Chaoseiro/x-unitmx>`__ supports
    almost all Tiled 0.11 features. Imports TMX/XML files into Sprite
@@ -483,13 +493,9 @@ Urho3D
 XNA
 ~~~
 
--  `FlatRedBall Engine TMXGlue
-   tool <http://www.flatredball.com/frb/docs/index.php?title=Kain%27s_Tavern#Tiled_Map_Editor.2C_TMX.2C_Glue_and_you.>`__
-   by Domenic Datti loads TMX maps into the FlatRedBall engine, complete
-   with node networks, pathfinding, and shapecollection support via
-   object layers.
--  `TiledMax <http://tiledmax.xpod.be/>`__ by Aimee Bailey, a .NET
-   library for parsing TMX maps without dependencies on Windows or XNA
+-  `FlatRedBall <http://flatredball.com/>`__ Glue tool ships with a
+   `Tiled plugin <http://flatredball.com/documentation/tools/tiled-plugin/>`__
+   that loads TMX maps into the FlatRedBall engine, providing rich integration with its features.
 -  `XTiled <https://bitbucket.org/vinull/xtiled>`__ by Michael C. Neel
    and Dylan Wolf, XNA library for loading and rendering TMX maps
 -  `XNA map loader <https://github.com/zachmu/tiled-xna>`__ by Kevin
