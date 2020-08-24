@@ -172,7 +172,7 @@ void AbstractObjectTool::mouseMoved(const QPointF &pos,
     const QPointF tilePosF = mapDocument()->renderer()->screenToTileCoords(offsetPos);
     const int x = qFloor(tilePosF.x());
     const int y = qFloor(tilePosF.y());
-    setStatusInfo(QString(QLatin1String("%1, %2 (%3, %4)")).arg(x).arg(y).arg(pixelPos.x()).arg(pixelPos.y()));
+    setStatusInfo(QStringLiteral("%1, %2 (%3, %4)").arg(x).arg(y).arg(pixelPos.x()).arg(pixelPos.y()));
 }
 
 void AbstractObjectTool::mousePressed(QGraphicsSceneMouseEvent *event)
@@ -289,7 +289,7 @@ static QString saveObjectTemplate(const MapObject *mapObject)
         suggestedFileName += mapObject->name();
     else
         suggestedFileName += QCoreApplication::translate("Tiled::MainWindow", "untitled");
-    suggestedFileName += QLatin1String(".tx");
+    suggestedFileName += QStringLiteral(".tx");
 
     QWidget *parent = DocumentManager::instance()->widget()->window();
     QString fileName = QFileDialog::getSaveFileName(parent,
@@ -456,6 +456,8 @@ void AbstractObjectTool::showContextMenu(MapObject *clickedObject,
         return;
 
     QMenu menu;
+    menu.setToolTipsVisible(true);
+
     QAction *duplicateAction = menu.addAction(tr("Duplicate %n Object(s)", "", selectedObjects.size()),
                                               this, &AbstractObjectTool::duplicateObjects);
     QAction *removeAction = menu.addAction(tr("Remove %n Object(s)", "", selectedObjects.size()),
@@ -469,6 +471,8 @@ void AbstractObjectTool::showContextMenu(MapObject *clickedObject,
                                              isTileObject);
 
     if (anyTileObjectSelected) {
+        menu.addSeparator();
+
         auto resetTileSizeAction = menu.addAction(tr("Reset Tile Size"), this, &AbstractObjectTool::resetTileSize);
         resetTileSizeAction->setEnabled(std::any_of(selectedObjects.begin(),
                                                     selectedObjects.end(),
@@ -478,6 +482,8 @@ void AbstractObjectTool::showContextMenu(MapObject *clickedObject,
         changeTileAction->setEnabled(tile() && (!selectedObjects.first()->isTemplateBase() ||
                                                 tile()->tileset()->isExternal()));
     }
+
+    menu.addSeparator();
 
     // Create action for replacing an object with a template
     auto replaceTemplateAction = menu.addAction(tr("Replace With Template"), this, &AbstractObjectTool::replaceObjectsWithTemplate);
@@ -495,9 +501,12 @@ void AbstractObjectTool::showContextMenu(MapObject *clickedObject,
 
         if (!(currentObject->isTemplateBase() || currentObject->isTemplateInstance())) {
             const Cell cell = selectedObjects.first()->cell();
-            // Saving objects with embedded tilesets is disabled
-            if (cell.isEmpty() || cell.tileset()->isExternal())
-                menu.addAction(tr("Save As Template"), this, &AbstractObjectTool::saveSelectedObject);
+            auto action = menu.addAction(tr("Save As Template"), this, &AbstractObjectTool::saveSelectedObject);
+
+            if (!cell.isEmpty() && !cell.tileset()->isExternal()) {
+                action->setEnabled(false);
+                action->setToolTip(tr("Can't create template with embedded tileset"));
+            }
         }
 
         if (currentObject->isTemplateBase()) { // Hide this operations for template base

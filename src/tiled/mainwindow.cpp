@@ -156,7 +156,7 @@ ExportDetails<Format> chooseExportDetails(const QString &fileName,
         QString lastExportedFilePath = pref->lastPath(Preferences::ExportedFile);
 
         suggestedFilename = lastExportedFilePath
-                            + QLatin1String("/") + baseName
+                            + QLatin1Char('/') + baseName
                             + QLatin1Char('.') + extension;
     }
 
@@ -618,7 +618,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
         filter.append(worldFilesFilter);
 
         auto mapEditor = static_cast<MapEditor*>(DocumentManager::instance()->editor(Document::DocumentType::MapDocumentType));
-        QString worldFile = QFileDialog::getSaveFileName(mapEditor->editorWidget(), tr("New Map"), lastPath,
+        QString worldFile = QFileDialog::getSaveFileName(mapEditor->editorWidget(), tr("New World"), lastPath,
                                                          filter, &worldFilesFilter);
         if (worldFile.isEmpty() || QFile::exists(worldFile))
             return;
@@ -998,13 +998,23 @@ bool MainWindow::openFile(const QString &fileName, FileFormat *fileFormat)
     // HACK: World files can't open as document, but we can instead open the
     // first map in the world.
     if (fileName.endsWith(QLatin1String(".world"))) {
+        auto &worldManager = WorldManager::instance();
+
         QString errorString;
-        World *world = WorldManager::instance().loadWorld(fileName, &errorString);
+        World *world = worldManager.loadWorld(fileName, &errorString);
         if (!world) {
             QMessageBox::critical(this, tr("Error Loading World"), errorString);
             return false;
         } else {
-            mLoadedWorlds = WorldManager::instance().worlds().keys();
+            mLoadedWorlds = worldManager.worlds().keys();
+
+            Document *document = mDocumentManager->currentDocument();
+            if (document && document->type() == Document::MapDocumentType)
+                if (worldManager.worldForMap(document->fileName()) == world)
+                    return true;
+
+            // Try to open the first map in the world, if the current map
+            // isn't already part of this world.
             return openFile(world->firstMap());
         }
     }
@@ -1147,6 +1157,19 @@ void MainWindow::saveAll()
             QMessageBox::critical(this, tr("Error Saving File"), error);
             return;
         }
+    }
+
+    for (const World *world : WorldManager::instance().worlds()) {
+        if (!mDocumentManager->isWorldModified(world->fileName))
+            continue;
+
+        QString error;
+        if (!WorldManager::instance().saveWorld(world->fileName, &error)) {
+            QMessageBox::critical(this, tr("Error Saving World"), error);
+            return;
+        }
+
+        DocumentManager::instance()->ensureWorldDocument(world->fileName)->undoStack()->setClean();
     }
 }
 
@@ -1378,10 +1401,10 @@ void MainWindow::saveProjectAs()
         return;
 
     if (!fileName.endsWith(QLatin1String(".tiled-project"))) {
-        while (fileName.endsWith(QLatin1String(".")))
+        while (fileName.endsWith(QLatin1Char('.')))
             fileName.chop(1);
 
-        fileName.append(QLatin1String(".tiled-project"));
+        fileName.append(QStringLiteral(".tiled-project"));
     }
 
     if (!project.save(fileName)) {
@@ -2073,7 +2096,7 @@ void MainWindow::updateWindowTitle()
     QString projectName = ProjectManager::instance()->project().fileName();
     if (!projectName.isEmpty()) {
         projectName = QFileInfo(projectName).completeBaseName();
-        projectName = QString(QLatin1String(" (%1)")).arg(projectName);
+        projectName = QStringLiteral(" (%1)").arg(projectName);
     }
 
     if (Document *document = mDocumentManager->currentDocument()) {

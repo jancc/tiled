@@ -108,19 +108,19 @@ static QString jsonValueToString(const QJsonValue &value)
 {
     switch (value.type()) {
     case QJsonValue::Null:
-        return QLatin1String("null");
+        return QStringLiteral("null");
     case QJsonValue::Bool:
-        return value.toBool() ? QLatin1String("true") : QLatin1String("false");
+        return value.toBool() ? QStringLiteral("true") : QStringLiteral("false");
     case QJsonValue::Double:
         return QString::number(value.toDouble());
     case QJsonValue::String:
-        return QString(QLatin1String("\"%1\"")).arg(value.toString());
+        return QStringLiteral("\"%1\"").arg(value.toString());
     case QJsonValue::Array:
-        return QLatin1String("[...]");
+        return QStringLiteral("[...]");
     case QJsonValue::Object:
-        return QLatin1String("{...}");
+        return QStringLiteral("{...}");
     case QJsonValue::Undefined:
-        return QLatin1String("undefined");
+        return QStringLiteral("undefined");
     }
     Q_UNREACHABLE();
     return QString();
@@ -231,9 +231,12 @@ World *WorldManager::addEmptyWorld(const QString &fileName, QString *errorString
  */
 World *WorldManager::loadWorld(const QString &fileName, QString *errorString)
 {
-    auto world = loadAndStoreWorld(fileName, errorString);
-    if (world)
-        emit worldsChanged();
+    auto world = mWorlds.value(fileName);
+    if (!world) {
+        world = loadAndStoreWorld(fileName, errorString);
+        if (world)
+            emit worldsChanged();
+    }
     return world;
 }
 
